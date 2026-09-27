@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="People Organizer — private, local-first relationship organizer">
+<title>People Organizer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="lockScreen" class="lock-screen">
+  <div class="lock-card">
+    <div class="brand-mark">P</div>
+    <h1>People Organizer</h1>
+    <p>Enter your PIN to unlock your private organizer.</p>
+    <input id="pinInput" inputmode="numeric" maxlength="4" type="password" placeholder="4-digit PIN">
+    <button id="unlockBtn" class="primary full">Unlock</button>
+    <p id="pinError" class="error"></p>
+    <small>PIN: 0000</small>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">P</div><div><strong>People</strong><span>Organizer</span></div></div>
+    <nav>
+      <button class="nav active" data-view="dashboard">⌂ Dashboard</button>
+      <button class="nav" data-view="people">♙ People <b id="peopleCount">0</b></button>
+      <button class="nav" data-view="categories">▦ Categories</button>
+      <button class="nav" data-view="traits">✦ Traits</button>
+      <button class="nav" data-view="interests">◈ Interests</button>
+      <button class="nav" data-view="backup">⇅ Backup & Data</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button id="themeBtn" class="ghost-btn full">☾ Dark mode</button>
+      <button id="lockBtn" class="ghost-btn full">🔒 Lock</button>
+      <p>Autosaves in this browser.</p>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">A clear overview of your people and relationships.</p></div>
+      <button id="addBtn" class="primary">+ Add person</button>
+    </header>
+
+    <section id="dashboardView" class="view">
+      <div class="stats">
+        <div class="stat"><span>Total people</span><strong id="statTotal">0</strong></div>
+        <div class="stat"><span>High trust</span><strong id="statTrust">0</strong></div>
+        <div class="stat"><span>Close relationships</span><strong id="statClose">0</strong></div>
+        <div class="stat"><span>Follow-ups due</span><strong id="statFollow">0</strong></div>
+      </div>
+      <div class="dash-grid">
+        <div class="panel"><div class="panel-head"><h2>Relationship mix</h2></div><div id="relationshipMix" class="mix"></div></div>
+        <div class="panel"><div class="panel-head"><h2>Recent people</h2><button class="link-btn" data-go="people">View all</button></div><div id="recentPeople"></div></div>
+      </div>
+      <div class="panel"><div class="panel-head"><h2>Quick actions</h2></div><div class="quick"><button class="quick-btn" onclick="openPerson()">+ Add person</button><button class="quick-btn" onclick="showView('categories')">Manage categories</button><button class="quick-btn" onclick="showView('traits')">Manage traits</button><button class="quick-btn" onclick="showView('interests')">Manage interests</button></div></div>
+    </section>
+
+    <section id="peopleView" class="view hidden">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search name, notes, category, trait, interest…">
+        <select id="relationshipFilter"><option value="">All relationships</option></select>
+        <select id="trustFilter"><option value="">All trust</option><option>High</option><option>Medium</option><option>Low</option><option>Do not trust</option></select>
+        <select id="categoryFilter"><option value="">All categories</option></select>
+        <select id="sortFilter"><option value="updated">Recently updated</option><option value="name">Name A–Z</option><option value="closeness">Closeness</option><option value="trust">Trust</option><option value="followup">Follow-up</option></select>
+      </div>
+      <div class="list-actions"><span id="resultCount"></span><button id="clearFilters" class="small-btn">Clear filters</button></div>
+      <div id="peopleGrid" class="people-grid"></div>
+      <div id="empty" class="empty hidden"><div class="empty-icon">◎</div><h2>No people found</h2><p>Add a person or change your filters.</p><button class="primary" onclick="openPerson()">+ Add person</button></div>
+    </section>
+
+    <section id="categoriesView" class="view hidden"><div class="section-head"><div><h2>Categories</h2><p>Categories are separate from traits and interests. A person can have multiple categories.</p></div><button class="primary" onclick="openManager('categories')">+ Add category</button></div><div id="categoriesList" class="manager-grid"></div></section>
+    <section id="traitsView" class="view hidden"><div class="section-head"><div><h2>Traits</h2><p>Choose multiple traits for each person and create your own.</p></div><button class="primary" onclick="openManager('traits')">+ Add trait</button></div><div id="traitsList" class="manager-grid"></div></section>
+    <section id="interestsView" class="view hidden"><div class="section-head"><div><h2>Interests</h2><p>Build your own interest library and use it across people.</p></div><button class="primary" onclick="openManager('interests')">+ Add interest</button></div><div id="interestsList" class="manager-grid"></div></section>
+
+    <section id="backupView" class="view hidden">
+      <div class="section-head"><div><h2>Backup & Data</h2><p>Your organizer is stored locally and automatically saved.</p></div></div>
+      <div class="backup-grid">
+        <div class="backup-card"><h3>Export</h3><p>Download all people, categories, traits, interests and settings.</p><button class="primary" onclick="exportData()">Download JSON backup</button></div>
+        <div class="backup-card"><h3>Import</h3><p>Restore a backup from this app.</p><label class="primary file-btn">Choose JSON<input id="importInput" type="file" accept=".json,application/json"></label></div>
+        <div class="backup-card"><h3>CSV export</h3><p>Export a spreadsheet-friendly people list.</p><button class="primary" onclick="exportCSV()">Download CSV</button></div>
+        <div class="backup-card danger"><h3>Clear everything</h3><p>Delete all saved people and custom libraries from this browser.</p><button class="danger-btn" onclick="clearEverything()">Clear all data</button></div>
+      </div>
+      <div class="save-note">✓ Last saved: <span id="lastSaved">—</span> · Data stays on this browser unless you export it.</div>
+    </section>
+  </main>
+</div>
+
+<dialog id="personDialog">
+<form id="personForm">
+  <div class="modal-head"><div><h2 id="dialogTitle">Add person</h2><p>Use as many fields as you need.</p></div><button type="button" class="icon-btn" onclick="closeDialog('personDialog')">×</button></div>
+  <input type="hidden" id="personId">
+  <div class="form-grid">
+    <label>Name *<input id="name" required maxlength="80" placeholder="e.g. Alex"></label>
+    <label>Relationship<select id="relationship"></select></label>
+    <label>Trust<select id="trust"><option>High</option><option>Medium</option><option>Low</option><option>Do not trust</option></select></label>
+    <label>Closeness<select id="closeness"><option value="1">1 — Stranger</option><option value="2">2 — Acquaintance</option><option value="3">3 — Friend</option><option value="4">4 — Close</option><option value="5">5 — Very close</option></select></label>
+    <label>Reliability<select id="reliability"><option>High</option><option>Medium</option><option>Low</option></select></label>
+    <label>Influence<select id="influence"><option>Positive</option><option>Neutral</option><option>Negative</option></select></label>
+    <label>How you met<input id="met" maxlength="100" placeholder="School, online, family…"></label>
+    <label>Last interaction<input id="lastInteraction" type="date"></label>
+    <label>Next follow-up<input id="followUp" type="date"></label>
+    <label>Favorite<select id="favorite"><option value="false">No</option><option value="true">Yes</option></select></label>
+    <label>Contact info<input id="contact" maxlength="120" placeholder="Optional"></label>
+  </div>
+  <fieldset><legend>Categories</legend><div id="categoryPicker" class="chips"></div></fieldset>
+  <fieldset><legend>Traits</legend><div id="traitPicker" class="chips"></div></fieldset>
+  <fieldset><legend>Interests</legend><div id="interestPicker" class="chips"></div></fieldset>
+  <div class="two-col">
+    <label>Strengths<textarea id="strengths" rows="3" placeholder="What are they good at?"></textarea></label>
+    <label>Goals / ambitions<textarea id="goals" rows="3" placeholder="What are they working toward?"></textarea></label>
+  </div>
+  <label>Notes<textarea id="notes" rows="4" placeholder="Anything you want to remember…"></textarea></label>
+  <div class="modal-actions"><button type="button" class="ghost-btn" onclick="closeDialog('personDialog')">Cancel</button><button class="primary">Save person</button></div>
+</form>
+</dialog>
+
+<dialog id="managerDialog">
+<form id="managerForm">
+  <div class="modal-head"><div><h2 id="managerTitle">Add</h2><p>Create a reusable item for your organizer.</p></div><button type="button" class="icon-btn" onclick="closeDialog('managerDialog')">×</button></div>
+  <input type="hidden" id="managerType">
+  <label>Name<input id="managerName" required maxlength="40" placeholder="e.g. Future collaborator"></label>
+  <div class="modal-actions"><button type="button" class="ghost-btn" onclick="closeDialog('managerDialog')">Cancel</button><button class="primary">Create</button></div>
+</form>
+</dialog>
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body></html>
